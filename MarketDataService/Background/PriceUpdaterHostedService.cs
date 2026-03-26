@@ -1,37 +1,40 @@
 ﻿using MarketDataService.Infrastructure.Fintacharts;
 using MarketDataService.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using System.Net.WebSockets;
-using System.Text;
 
 namespace MarketDataService.Background
 {
     public class PriceUpdaterHostedService : BackgroundService
     {
-        private readonly IServiceProvider _provider;
-        private readonly FintachartsWebSocketClient _ws;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public PriceUpdaterHostedService(IServiceProvider provider, FintachartsWebSocketClient ws)
+        public PriceUpdaterHostedService(IServiceScopeFactory scopeFactory)
         {
-            _provider = provider;
-            _ws = ws;
+            _scopeFactory = scopeFactory;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await _ws.StartAsync(async (msg) =>
+            using var scope = _scopeFactory.CreateScope();
+
+            var ws = scope.ServiceProvider
+                .GetRequiredService<FintachartsWebSocketClient>();
+
+            await ws.StartAsync(async (msg) =>
             {
-                using var scope = _provider.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                using var innerScope = _scopeFactory.CreateScope();
+                var db = innerScope.ServiceProvider.GetRequiredService<AppDbContext>();
 
                 dynamic data = JsonConvert.DeserializeObject(msg)!;
 
-                if (data.price != null)
+                if (data?.price != null)
                 {
-                    var symbol = (string)data.symbol;
-                    var priceValue = (decimal)data.price;
+                    string symbol = data.symbol;
+                    decimal priceValue = data.price;
 
-                    var asset = db.Assets.FirstOrDefault(a => a.Symbol == symbol);
+                    var asset = await db.Assets
+                        .FirstOrDefaultAsync(a => a.Symbol == symbol, stoppingToken);
 
                     if (asset == null) return;
 
@@ -42,7 +45,7 @@ namespace MarketDataService.Background
                         UpdatedAt = DateTime.UtcNow
                     });
 
-                    await db.SaveChangesAsync();
+                    await db.SaveChangesAsync(stoppingToken);
                 }
 
             }, stoppingToken);

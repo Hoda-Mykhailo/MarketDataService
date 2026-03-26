@@ -1,4 +1,7 @@
+using MarketDataService.Background;
+using MarketDataService.Infrastructure.Fintacharts;
 using MarketDataService.Infrastructure.Persistence;
+using MarketDataService.Middleware;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+builder.Services.AddHttpClient();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=market.db"));
 
@@ -15,7 +19,22 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddScoped<AuthClient>();
+builder.Services.AddScoped<FintachartsRestClient>();
+builder.Services.AddScoped<FintachartsWebSocketClient>();
+
+builder.Services.AddScoped<AssetService>();
+builder.Services.AddScoped<PriceService>();
+
+builder.Services.AddHostedService<PriceUpdaterHostedService>();
+
+builder.Services.AddHttpClient<AuthClient>(client =>
+{
+    client.BaseAddress = new Uri("https://platform.fintacharts.com");
+});
+
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

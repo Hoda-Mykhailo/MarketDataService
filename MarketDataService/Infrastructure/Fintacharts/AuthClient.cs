@@ -17,7 +17,7 @@ namespace MarketDataService.Infrastructure.Fintacharts
         public async Task<string> GetTokenAsync()
         {
             var request = new HttpRequestMessage(HttpMethod.Post,
-                $"{_config["Fintacharts:Uri"]}/identity/realms/fintatech/protocol/openid-connect/token");
+                "/identity/realms/fintatech/protocol/openid-connect/token");
 
             request.Content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
@@ -30,10 +30,10 @@ namespace MarketDataService.Infrastructure.Fintacharts
             var response = await _http.SendAsync(request);
 
             if (!response.IsSuccessStatusCode)
-                throw new Exception("Auth failed");
+                throw new Exception($"Auth failed: {response.StatusCode}");
 
             var json = await response.Content.ReadAsStringAsync();
-            dynamic data = JsonConvert.DeserializeObject(json)!;
+            var data = JsonConvert.DeserializeObject<dynamic>(json)!;
 
             return data.access_token;
         }
