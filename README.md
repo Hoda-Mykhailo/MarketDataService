@@ -12,3 +12,9 @@ I performed a migration from code for two tables, price and asset. During the mi
 All other files (controllers, DTO, mapping) were added. After rebuilding the project, no errors occur, but there are errors when starting the program. The code cannot retrieve login data on the finance platform because there is no API key. Therefore, it throws a 401 error when running in the terminal. Further steps are just to fix this error.
 
 --
+
+In general, the code works, but of course not all the points that were relatively covered in the TK are fulfilled. The previous problem was that the resource with the currency and exchange rate did not have an API or it was hidden, because I did not find it there. Therefore, I decided to use a fake Token, I thought that it might help and remove the error in the terminal when the program is launched, in general it helped or I do not know whether this is the right step. Also, after analyzing the TK, I completely understood that the level of the test is somewhere in the middle)) (subjectively, my opinion), and here I understood why you warned about the complexity.
+
+--
+
+I did everything I could in the allotted time and on time. I hope this solution will suit you)) I would also be happy to receive feedback on the task if possible, which could help me in developing in .NET. Thanks.
