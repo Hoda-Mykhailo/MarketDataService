@@ -32,6 +32,10 @@ builder.Services.AddHttpClient<AuthClient>(client =>
 {
     client.BaseAddress = new Uri("https://platform.fintacharts.com");
 });
+builder.Services.Configure<HostOptions>(options =>
+{
+    options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+});
 
 var app = builder.Build();
 
